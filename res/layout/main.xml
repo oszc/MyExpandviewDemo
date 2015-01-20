@@ -5,7 +5,7 @@
               android:layout_height="fill_parent"
         >
 
-   <com.zc.MyExpandviewDemo.ui.MyExpandListView
+   <com.zc.MyExpandviewDemo.ui.MySecondExpandListView
            android:id="@+id/my_expand_listview"
            android:groupIndicator="@null"
            android:layout_width="fill_parent"

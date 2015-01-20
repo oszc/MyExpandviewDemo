@@ -4,7 +4,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
-import com.zc.MyExpandviewDemo.ui.MyExpandListView;
+import com.zc.MyExpandviewDemo.ui.MySecondExpandListView;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -14,8 +14,9 @@ import java.util.Map;
 public class MyActivity extends Activity {
 
     @InjectView(R.id.my_expand_listview)
-    MyExpandListView mMyExpandListview;
+    MySecondExpandListView mMyExpandListview;
     private Map<String, List<String>> mData;
+    private MyExpandableListviewAdapter mAdapter;
 
     /**
      * 数据
@@ -36,11 +37,29 @@ public class MyActivity extends Activity {
         setContentView(R.layout.main);
         ButterKnife.inject(this);
         initData();
-        mMyExpandListview.setAdapter(new MyExpandableListviewAdapter(this,mData));
+        mAdapter = new MyExpandableListviewAdapter(this, mData);
+        mMyExpandListview.setAdapter(mAdapter);
         for (int i = 0; i < mData.size(); i++) {
             mMyExpandListview.expandGroup(i);
 
         }
+        /*
+        mMyExpandListview.setOnHeaderUpdateListener(new MyExpandListView.OnHeaderUpdateListener() {
+            @Override
+            public View getPinnedHeader() {
+                View headerView = (ViewGroup) getLayoutInflater().inflate(R.layout.group_layout, null);
+                headerView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                return headerView;
+            }
+
+            @Override
+            public void updatePinnedHeader(View headerView, int firstVisibleGroupPos) {
+                String group = (String) mAdapter.getGroup(firstVisibleGroupPos);
+                TextView tv = (TextView) headerView.findViewById(R.id.tv_grop);
+                tv.setText(group);
+            }
+        });
+        */
     }
 
     private void initData() {

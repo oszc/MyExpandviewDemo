@@ -5,12 +5,13 @@ import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
-import android.widget.ExpandableListView;
+import android.widget.*;
 import com.zc.MyExpandviewDemo.BuildConfig;
+import com.zc.MyExpandviewDemo.R;
 
 /**
  * 1/19/15  4:48 PM
@@ -38,7 +39,6 @@ public class MyExpandListView extends ExpandableListView implements AbsListView.
 
     public interface OnHeaderUpdateListener {
         public View getPinnedHeader();
-
         public void updatePinnedHeader(View headerView, int firstVisibleGroupPos);
     }
 
@@ -53,25 +53,51 @@ public class MyExpandListView extends ExpandableListView implements AbsListView.
 
     private boolean mActionDownHappened = false;
     protected boolean mIsHeaderGroupClickable = true;
+    private LayoutInflater mLayoutInflater;
 
     public MyExpandListView(Context context) {
         super(context);
-        initView();
+        initView(context);
     }
 
     public MyExpandListView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        initView();
+        initView(context);
     }
 
     public MyExpandListView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        initView();
+        initView(context);
     }
 
-    private void initView() {
+    private void initView(Context context) {
+        mLayoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         setFadingEdgeLength(0);
         setOnScrollListener(this);
+        post(new Runnable() {
+            @Override
+            public void run() {
+                setOnHeaderUpdateListener(new OnHeaderUpdateListener() {
+                    @Override
+                    public View getPinnedHeader() {
+                        View view =mLayoutInflater.inflate(R.layout.group_layout,null);
+                        view.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                        return view;
+                    }
+
+                    @Override
+                    public void updatePinnedHeader(View headerView, int firstVisibleGroupPos) {
+
+                        TextView tv = (TextView) headerView.findViewById(R.id.tv_grop);
+                        ExpandableListAdapter expandableListAdapter = getExpandableListAdapter();
+                        tv.setText(expandableListAdapter.getGroup(firstVisibleGroupPos).toString());
+
+
+                    }
+                });
+            }
+        });
+
     }
 
     @Override
@@ -92,33 +118,26 @@ public class MyExpandListView extends ExpandableListView implements AbsListView.
 
     public void setOnHeaderUpdateListener(OnHeaderUpdateListener listener) {
         mHeaderUpdateListener = listener;
-        if (listener != null) {
+        if (listener == null) {
             mHeaderView = null;
             mHeaderWidth = mHeaderHeight = 0;
             return;
         }
 
         mHeaderView = listener.getPinnedHeader();
-
         int firstVisiblePos = getFirstVisiblePosition();
-
         int firstVisibleGroupPos = getPackedPositionGroup(getExpandableListPosition(firstVisiblePos));
-
         listener.updatePinnedHeader(mHeaderView, firstVisibleGroupPos);
-
         requestLayout();
-
         postInvalidate();
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-
         if (mHeaderView == null) {
             return;
         }
-
         measureChild(mHeaderView, widthMeasureSpec, heightMeasureSpec);
         mHeaderWidth = mHeaderView.getMeasuredWidth();
         mHeaderHeight = mHeaderView.getMeasuredHeight();
@@ -137,14 +156,27 @@ public class MyExpandListView extends ExpandableListView implements AbsListView.
 
     @Override
     protected void dispatchDraw(Canvas canvas) {
+        //viewGroup 如果没有背景，不会调用onDraw,所以如果画子view只能在dispatchDraw中
         super.dispatchDraw(canvas);
         if (mHeaderView != null) {
             drawChild(canvas, mHeaderView, getDrawingTime());
         }
     }
 
+    /*
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        if (mHeaderView != null) {
+            drawChild(canvas, mHeaderView, getDrawingTime());
+        }
+    }
+    */
+
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
+        //主要作用是：点击最顶部的view还能折叠group
+        //
         int x = (int) ev.getX();
         int y = (int) ev.getY();
 
